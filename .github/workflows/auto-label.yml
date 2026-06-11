@@ -1,0 +1,48 @@
+name: 🏷️ Auto Label New Issues
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auto-label by title pattern
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.issue.title.toLowerCase();
+            const labels = [];
+
+            // Severity labels
+            if (/critical|urgent|crash|data loss|安全/.test(title))
+              labels.push('severity:critical');
+            else if (/major|broken|blocked|down/.test(title))
+              labels.push('severity:major');
+            else if (/minor|cosmetic|typo|ui/.test(title))
+              labels.push('severity:minor');
+
+            // Category labels
+            if (/android|ios|app/.test(title))
+              labels.push('platform:mobile');
+            else if (/web|browser|desktop/.test(title))
+              labels.push('platform:web');
+            else if (/api|backend|server/.test(title))
+              labels.push('platform:backend');
+
+            if (/v[0-9]+\.[0-9]+/.test(title))
+              labels.push('version-tracked');
+
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels,
+              });
+            }

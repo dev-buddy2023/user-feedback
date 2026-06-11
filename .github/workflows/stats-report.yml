@@ -1,0 +1,73 @@
+name: 📊 Feedback Stats
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 每周一 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: read
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate stats
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100,
+            });
+
+            const now = new Date();
+            const weekAgo = new Date(now - 7*24*60*60*1000);
+            const monthAgo = new Date(now - 30*24*60*60*1000);
+
+            const stats = {
+              total: issues.length,
+              open: issues.filter(i => i.state === 'open').length,
+              closed: issues.filter(i => i.state === 'closed').length,
+              bugs: issues.filter(i => i.labels.some(l => l.name === 'bug')).length,
+              features: issues.filter(i => i.labels.some(l => l.name === 'enhancement')).length,
+              weekNew: issues.filter(i => new Date(i.created_at) >= weekAgo).length,
+              monthNew: issues.filter(i => new Date(i.created_at) >= monthAgo).length,
+              avgResolutionDays: 0,
+            };
+
+            const closedWithDates = issues.filter(i =>
+              i.state === 'closed' && i.closed_at && i.created_at
+            );
+            if (closedWithDates.length > 0) {
+              const totalDays = closedWithDates.reduce((sum, i) => {
+                const created = new Date(i.created_at);
+                const closed = new Date(i.closed_at);
+                return sum + (closed - created) / (1000 * 60 * 60 * 24);
+              }, 0);
+              stats.avgResolutionDays = Math.round(totalDays / closedWithDates.length * 10) / 10;
+            }
+
+            // Output to GITHUB_STEP_SUMMARY
+            const core = require('@actions/core');
+            const summary = [
+              `## 📊 反馈统计周报`,
+              ``,
+              `| 指标 | 数值 |`,
+              `|------|------|`,
+              `| 📦 总计 | ${stats.total} |`,
+              `| 🟢 待处理 | ${stats.open} |`,
+              `| ✅ 已处理 | ${stats.closed} |`,
+              `| 🐛 Bug | ${stats.bugs} |`,
+              `| 💡 功能建议 | ${stats.features} |`,
+              `| 📅 本周新增 | ${stats.weekNew} |`,
+              `| 📅 本月新增 | ${stats.monthNew} |`,
+              `| ⏱ 平均处理时间 | ${stats.avgResolutionDays} 天 |`,
+            ].join('\n');
+
+            await core.summary
+              .addRaw(summary)
+              .write();

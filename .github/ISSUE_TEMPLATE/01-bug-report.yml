@@ -1,0 +1,62 @@
+name: 🐛 Bug Report
+description: 报告一个 bug / Report a bug
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 感谢提交反馈！Thanks for reporting!
+  - type: input
+    id: summary
+    attributes:
+      label: 一句话描述 / Summary
+      placeholder: 发生了什么问题？What went wrong？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      placeholder: |
+        1. 打开...
+        2. 点击...
+        3. 看到错误...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为 / Expected behavior
+    validations:
+      required: false
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: 截图 / Screenshots (optional)
+      description: 拖入图片或粘贴链接
+    validations:
+      required: false
+  - type: dropdown
+    id: device
+    attributes:
+      label: 设备 / Device
+      options:
+        - iPhone
+        - Android
+        - Web
+        - Mac
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 严重程度 / Severity
+      options:
+        - 🔴 Critical (app broken)
+        - 🟠 Major (feature broken)
+        - 🟡 Minor (annoyance)
+        - 🔵 Suggestion (nice-to-have)
+    validations:
+      required: true

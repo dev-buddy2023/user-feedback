@@ -1,0 +1,14 @@
+name: 📝 Other / 其他
+description: 其他反馈 / Other feedback (praise, question, etc.)
+labels: ["other"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        随便说！Anything goes here.
+  - type: textarea
+    id: content
+    attributes:
+      label: 你的反馈 / Your feedback
+    validations:
+      required: true
